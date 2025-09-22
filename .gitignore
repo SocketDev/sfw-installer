@@ -1,0 +1,4 @@
+.sfw-cache
+node_modules/
+.crush
+dist/
