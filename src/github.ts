@@ -6,7 +6,7 @@ import { getJSON } from './http.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_OWNER = 'SocketDev';
-const REPO_NAME = 'firewall-release';
+const REPO_NAME = 'sfw-lite';
 const LATEST_API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
 
 const PACKAGE_VERSION = JSON.parse(
@@ -43,9 +43,9 @@ function mapArch() {
 export function expectedAssetName() {
   const plat = mapPlatform();
   const arch = mapArch();
-  if (plat === 'windows' && arch === 'x86_64') return 'sfw-windows-x86_64.exe';
-  if (plat === 'macos' && (arch === 'arm64' || arch === 'x86_64')) return `sfw-macos-${arch}`;
-  if (plat === 'linux' && arch === 'x86_64') return 'sfw-linux-x86_64';
+  if (plat === 'windows' && arch === 'x86_64') return 'sfw-lite-windows-x86_64.exe';
+  if (plat === 'macos' && (arch === 'arm64' || arch === 'x86_64')) return `sfw-lite-macos-${arch}`;
+  if (plat === 'linux' && arch === 'x86_64') return 'sfw-lite-linux-x86_64';
   // If we get here, there's no published combo
   throw new Error(`No published asset for ${process.platform}/${process.arch}`);
 }
