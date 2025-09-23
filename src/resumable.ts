@@ -5,6 +5,7 @@ import type { IncomingMessage } from 'node:http';
 import plf from 'proper-lockfile';
 
 import { httpsGetWithRange } from './httpUtils.ts';
+import { swallowError } from './util.ts';
 
 function checkIntegrity(fd: number, hash: crypto.Hash, expectedDigestHex: string): boolean {
   const buffer = Buffer.alloc(64 * 1024);
@@ -93,6 +94,7 @@ export async function eagerAcquireLockAndDownload(
   const pendingDownloadPath = `${destination}.dl`;
 
   const release = await plf.lock(lockfilePath, {
+    realpath: false,
     onCompromised: (_err: Error) => {
       aborted = true;
     },
@@ -101,9 +103,9 @@ export async function eagerAcquireLockAndDownload(
   const fd = fs.openSync(pendingDownloadPath, 'w+');
   const bytesAlreadyDownloaded = getSizeOnDisk(fd);
 
-  let $res: IncomingMessage | null = null;
+  let response: IncomingMessage | null = null;
   try {
-    $res = await downloadWithResume(
+    response = await downloadWithResume(
       url,
       fd,
       bytesAlreadyDownloaded,
@@ -113,10 +115,10 @@ export async function eagerAcquireLockAndDownload(
       pendingDownloadPath,
     );
   } finally {
-    $res?.destroy();
-    await release().catch(() => {});
-    try {
-      fs.closeSync(fd);
-    } catch {}
+    response?.destroy();
+    await swallowError(() => release());
+    swallowError(() => fs.closeSync(fd));
   }
+
+  fs.renameSync(pendingDownloadPath, destination);
 }

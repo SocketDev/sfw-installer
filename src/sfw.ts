@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { expectedAssetName, fetchLatest, findAssetUrl, type LatestRelease } from './githubUtils.ts';
 import { eagerAcquireLockAndDownload } from './resumable.ts';
+import { swallowError } from './util.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const NEXT_CHECK_FILE = '.sfw-cache/next-check';
@@ -67,27 +68,32 @@ function tryClearQuarantine(p: string): void {
 
 function ensureExecutable(p: string): void {
   if (process.platform !== 'win32') {
-    try {
-      fs.chmodSync(p, 0o755);
-    } catch {
-      /* ignore */
+    swallowError(() => fs.chmodSync(p, 0o755))
+  }
+}
+
+function removeSymlink(symlinkPath: string) {
+  try {
+    // Does not follow symlink. Will throw if the file does not exist.
+    fs.lstatSync(symlinkPath);
+    fs.unlinkSync(symlinkPath);
+  // biome-ignore lint/suspicious/noExplicitAny: safe to use in this context
+  } catch (err: any) {
+    if (err?.code !== "ENOENT") {
+      throw err;
     }
   }
 }
 
 function trySymlinkLatest(assetPath: string) {
   try {
-    let previousBin = null;
-    try {
-      previousBin = fs.realpathSync(LATEST_SYMLINK_PATH);
-    } catch {}
-    fs.symlinkSync(assetPath, LATEST_SYMLINK_PATH);
+    const previousBin = swallowError(() => fs.realpathSync(LATEST_SYMLINK_PATH));
     // Remove previously newest version (symlink target) if it exists and is different
     if (previousBin && previousBin !== assetPath) {
-      try {
-        fs.rmSync(path.dirname(previousBin), { recursive: true, force: true });
-      } catch {}
+      swallowError(() => fs.rmSync(path.dirname(previousBin), { recursive: true, force: true }));
     }
+    removeSymlink(LATEST_SYMLINK_PATH);
+    fs.symlinkSync(assetPath, LATEST_SYMLINK_PATH);
   } catch (e) {
     console.error('Failed to create latest symlink:', e);
   }
@@ -150,12 +156,11 @@ async function ensureLatestBinary(): Promise<LatestBinary> {
     // Cached binary exists, lazily download new release in background
     setNextCheckTimeSync();
 
-    try {
+    await swallowError(async () => {
       const latest = await fetchLatest();
       await downloadAndVerifyReleaseSync(latest, assetName);
-    } catch (_e) {
-      // Ignore background errors
-    }
+    });
+
   }
   return { tag: 'cached', bin: cached };
 }
@@ -183,10 +188,7 @@ async function main() {
   const child = spawn(latestBinary.bin, argv, { stdio: 'inherit', env: process.env });
   child.on('exit', (code, signal) => {
     if (signal) {
-      try {
-        process.kill(process.pid, signal);
-      } catch {}
-      return;
+      return swallowError(() => process.kill(process.pid, signal))
     }
     process.exit(code ?? 0);
   });
