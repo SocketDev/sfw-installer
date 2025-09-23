@@ -3,10 +3,12 @@
 import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { expectedAssetName, fetchLatest, findAssetUrl, type LatestRelease } from './githubUtils.ts';
 import { eagerAcquireLockAndDownload } from './resumable.ts';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const NEXT_CHECK_FILE = '.sfw-cache/next-check';
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 

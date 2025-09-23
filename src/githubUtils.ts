@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { getJSON } from './httpUtils.ts';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_OWNER = 'SocketDev';
 const REPO_NAME = 'firewall-release';
 const LATEST_API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
