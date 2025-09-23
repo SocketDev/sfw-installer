@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 
-import { eagerAcquireLockAndDownload } from './resumable.ts'
-import { expectedAssetName, fetchLatest, findAssetUrl, type LatestRelease } from './githubUtils.ts'
+import { spawn, spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
-import fs from "node:fs"
-import path from "node:path"
-import { spawn, spawnSync } from "node:child_process"
+import { expectedAssetName, fetchLatest, findAssetUrl, type LatestRelease } from './githubUtils.ts';
+import { eagerAcquireLockAndDownload } from './resumable.ts';
 
-const NEXT_CHECK_FILE = ".sfw-cache/next-check";
+const NEXT_CHECK_FILE = '.sfw-cache/next-check';
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 // Handles both global and npx temporary installs.
-const INSTALL_ROOT = path.resolve(__dirname, "..");
+const INSTALL_ROOT = path.resolve(__dirname, '..');
 const NEXT_CHECK_PATH = path.join(INSTALL_ROOT, NEXT_CHECK_FILE);
-const LATEST_SYMLINK_PATH = path.join(INSTALL_ROOT, ".sfw-cache", "latest");
+const LATEST_SYMLINK_PATH = path.join(INSTALL_ROOT, '.sfw-cache', 'latest');
 
 interface LatestBinary {
   tag: string;
@@ -34,14 +34,14 @@ function findValidCachedReleaseSync(): string | null {
 }
 
 function getCachePaths(releaseName: string, assetName: string) {
-  const cacheDir = path.join(INSTALL_ROOT, ".sfw-cache", releaseName);
+  const cacheDir = path.join(INSTALL_ROOT, '.sfw-cache', releaseName);
   const assetPath = path.join(cacheDir, assetName);
   return { cacheDir, assetPath };
 }
 
 function shouldCheckForUpdate() {
   try {
-    const data = fs.readFileSync(NEXT_CHECK_PATH, "utf8");
+    const data = fs.readFileSync(NEXT_CHECK_PATH, 'utf8');
     const nextCheck = Date.parse(data.trim());
     if (Number.isNaN(nextCheck)) {
       return true;
@@ -59,15 +59,17 @@ function setNextCheckTimeSync() {
 }
 
 function tryClearQuarantine(p: string): void {
-  if (process.platform !== "darwin") return;
-  spawnSync("xattr", ["-d", "com.apple.quarantine", p], { stdio: "ignore" });
+  if (process.platform !== 'darwin') return;
+  spawnSync('xattr', ['-d', 'com.apple.quarantine', p], { stdio: 'ignore' });
 }
 
 function ensureExecutable(p: string): void {
-  if (process.platform !== "win32") {
+  if (process.platform !== 'win32') {
     try {
       fs.chmodSync(p, 0o755);
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 }
 
@@ -75,26 +77,29 @@ function trySymlinkLatest(assetPath: string) {
   try {
     let previousBin = null;
     try {
-        previousBin = fs.realpathSync(LATEST_SYMLINK_PATH);
+      previousBin = fs.realpathSync(LATEST_SYMLINK_PATH);
     } catch {}
     fs.symlinkSync(assetPath, LATEST_SYMLINK_PATH);
     // Remove previously newest version (symlink target) if it exists and is different
     if (previousBin && previousBin !== assetPath) {
       try {
-        fs.rmSync(path.dirname(previousBin), {recursive: true, force: true});
+        fs.rmSync(path.dirname(previousBin), { recursive: true, force: true });
       } catch {}
     }
   } catch (e) {
-    console.error("Failed to create latest symlink:", e);
+    console.error('Failed to create latest symlink:', e);
   }
 }
 
 async function downloadAndVerifyReleaseSync(
-  { name, assets }: {
-    name:string,
-    assets:Array<{name:string,browser_download_url:string,digest:string}>
+  {
+    name,
+    assets,
+  }: {
+    name: string;
+    assets: Array<{ name: string; browser_download_url: string; digest: string }>;
   },
-  assetName: string
+  assetName: string,
 ): Promise<LatestBinary> {
   const { cacheDir, assetPath } = getCachePaths(name, assetName);
   fs.mkdirSync(cacheDir, { recursive: true });
@@ -106,7 +111,7 @@ async function downloadAndVerifyReleaseSync(
 
   const [algo, hex] = binUrl.digest.trim().toLowerCase().split(/:/);
   if (!algo || !hex) {
-    throw new Error("Invalid digest in release asset");
+    throw new Error('Invalid digest in release asset');
   }
 
   // If the binary for this release already exists, do not overwrite
@@ -134,7 +139,7 @@ async function ensureLatestBinary(): Promise<LatestBinary> {
     try {
       releaseInfo = await fetchLatest();
     } catch (_e) {
-      throw new Error("Unable to fetch latest release and no valid cached release found.");
+      throw new Error('Unable to fetch latest release and no valid cached release found.');
     }
     return await downloadAndVerifyReleaseSync(releaseInfo, assetName);
   }
@@ -150,7 +155,7 @@ async function ensureLatestBinary(): Promise<LatestBinary> {
       // Ignore background errors
     }
   }
-  return { tag: "cached", bin: cached };
+  return { tag: 'cached', bin: cached };
 }
 
 async function main() {
@@ -169,19 +174,21 @@ async function main() {
     process.exit(1);
   }
   if (!latestBinary) {
-    console.error("[sfw] No valid firewall binary available for this platform.");
+    console.error('[sfw] No valid firewall binary available for this platform.');
     process.exit(1);
   }
 
-  const child = spawn(latestBinary.bin, argv, { stdio: "inherit", env: process.env });
-  child.on("exit", (code, signal) => {
+  const child = spawn(latestBinary.bin, argv, { stdio: 'inherit', env: process.env });
+  child.on('exit', (code, signal) => {
     if (signal) {
-      try { process.kill(process.pid, signal); } catch {}
+      try {
+        process.kill(process.pid, signal);
+      } catch {}
       return;
     }
     process.exit(code ?? 0);
   });
-  child.on("error", (_err) => {
+  child.on('error', (_err) => {
     process.exit(1);
   });
 }

@@ -6,11 +6,16 @@
   "bin": {
     "sfw": "src/dist/sfw.js"
   },
+  "scripts": {
+    "check": "biome check && npm run check:types",
+    "check:fix": "biome check --fix"
+  },
   "type": "module",
   "engines": {
     "node": ">=20"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
     "@types/node": "^24.5.2",
     "@types/proper-lockfile": "^4.1.4",
     "typescript": "^5.9.2"
