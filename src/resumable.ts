@@ -33,7 +33,7 @@ function saveToDisk(
 
     res.on('data', (chunk: Buffer) => {
       if (aborted()) {
-        return reject();
+        return reject(new Error('Download aborted'));
       }
       const currentChunkOffset = currentOffset;
       currentOffset += chunk.byteLength;
@@ -42,7 +42,7 @@ function saveToDisk(
 
     res.on('end', () => {
       if (aborted()) {
-        return reject();
+        return reject(new Error('Download aborted'));
       }
       resolve();
     });
@@ -65,11 +65,13 @@ async function downloadWithResume(
   await saveToDisk(res, fd, bytesAlreadyDownloaded, aborted);
   fs.fsyncSync(fd);
 
-  if (!checkIntegrity(fd, hash, expectedDigestHex)) {
+  const hasExpectedHash = checkIntegrity(fd, hash, expectedDigestHex);
+  fs.closeSync(fd);
+
+  if (!hasExpectedHash) {
     fs.unlinkSync(pendingDownloadPath);
     throw new Error('Downloaded file integrity check failed');
   }
-  fs.closeSync(fd);
 
   return res;
 }

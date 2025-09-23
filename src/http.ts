@@ -72,6 +72,7 @@ export async function getText(url: string, options: HttpGetOptions = {}): Promis
   });
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: reasonable return type for JSON.parse
 export async function getJSON(url: string, options: HttpGetOptions = {}): Promise<any> {
   const s = await getText(url, options);
   return JSON.parse(s);

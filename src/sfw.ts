@@ -68,7 +68,7 @@ function tryClearQuarantine(p: string): void {
 
 function ensureExecutable(p: string): void {
   if (process.platform !== 'win32') {
-    swallowError(() => fs.chmodSync(p, 0o755))
+    swallowError(() => fs.chmodSync(p, 0o755));
   }
 }
 
@@ -77,9 +77,9 @@ function removeSymlink(symlinkPath: string) {
     // Does not follow symlink. Will throw if the file does not exist.
     fs.lstatSync(symlinkPath);
     fs.unlinkSync(symlinkPath);
-  // biome-ignore lint/suspicious/noExplicitAny: safe to use in this context
+    // biome-ignore lint/suspicious/noExplicitAny: safe to use in this context
   } catch (err: any) {
-    if (err?.code !== "ENOENT") {
+    if (err?.code !== 'ENOENT') {
       throw err;
     }
   }
@@ -160,7 +160,6 @@ async function ensureLatestBinary(): Promise<LatestBinary> {
       const latest = await fetchLatest();
       await downloadAndVerifyReleaseSync(latest, assetName);
     });
-
   }
   return { tag: 'cached', bin: cached };
 }
@@ -180,15 +179,11 @@ async function main() {
     }
     process.exit(1);
   }
-  if (!latestBinary) {
-    console.error('[sfw] No valid firewall binary available for this platform.');
-    process.exit(1);
-  }
 
   const child = spawn(latestBinary.bin, argv, { stdio: 'inherit', env: process.env });
   child.on('exit', (code, signal) => {
     if (signal) {
-      return swallowError(() => process.kill(process.pid, signal))
+      return swallowError(() => process.kill(process.pid, signal));
     }
     process.exit(code ?? 0);
   });
