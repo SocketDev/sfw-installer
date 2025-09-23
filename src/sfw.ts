@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { expectedAssetName, fetchLatest, findAssetUrl, type LatestRelease } from './githubUtils.ts';
+import { expectedAssetName, fetchLatest, findAssetUrl, type LatestRelease } from './github.ts';
 import { eagerAcquireLockAndDownload } from './resumable.ts';
 import { swallowError } from './util.ts';
 

@@ -4,7 +4,7 @@ import type { IncomingMessage } from 'node:http';
 
 import plf from 'proper-lockfile';
 
-import { httpsGetWithRange } from './httpUtils.ts';
+import { httpsGetWithRange } from './http.ts';
 import { swallowError } from './util.ts';
 
 function checkIntegrity(fd: number, hash: crypto.Hash, expectedDigestHex: string): boolean {
