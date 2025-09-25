@@ -6,13 +6,13 @@ import { getJSON } from './http.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_OWNER = 'SocketDev';
-const REPO_NAME = 'sfw-lite';
+const REPO_NAME = 'sfw-free';
 const LATEST_API = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`;
 
 const PACKAGE_VERSION = JSON.parse(
   fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'),
 ).version;
-const USER_AGENT = `sfw-lite/${PACKAGE_VERSION}`;
+const USER_AGENT = `sfw-free/${PACKAGE_VERSION}`;
 
 function mapPlatform() {
   // Only windows, macos, and linux are published (per spec)
@@ -43,9 +43,9 @@ function mapArch() {
 export function expectedAssetName() {
   const plat = mapPlatform();
   const arch = mapArch();
-  if (plat === 'windows' && arch === 'x86_64') return 'sfw-lite-windows-x86_64.exe';
-  if (plat === 'macos' && (arch === 'arm64' || arch === 'x86_64')) return `sfw-lite-macos-${arch}`;
-  if (plat === 'linux' && arch === 'x86_64') return 'sfw-lite-linux-x86_64';
+  if (plat === 'windows' && arch === 'x86_64') return 'sfw-free-windows-x86_64.exe';
+  if (plat === 'macos' && (arch === 'arm64' || arch === 'x86_64')) return `sfw-free-macos-${arch}`;
+  if (plat === 'linux' && arch === 'x86_64') return 'sfw-free-linux-x86_64';
   // If we get here, there's no published combo
   throw new Error(`No published asset for ${process.platform}/${process.arch}`);
 }
