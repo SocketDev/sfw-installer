@@ -163,7 +163,7 @@ async function ensureLatestBinary(): Promise<LatestBinary> {
 }
 
 async function main() {
-  // Usage: `sfw npm install ...` or even `npx @socketsecurity/sfw-lite npm install ...`
+  // Usage: `sfw npm install ...` or even `npx @socketsecurity/sfw-free npm install ...`
   const [, , ...argv] = process.argv;
 
   let latestBinary: LatestBinary;
