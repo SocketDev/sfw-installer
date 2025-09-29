@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import yoctoSpinner from 'yocto-spinner';
+
 import { expectedAssetName, fetchLatest, findAssetUrl, type LatestRelease } from './github.ts';
 import { eagerAcquireLockAndDownload } from './resumable.ts';
 import { swallowError } from './util.ts';
@@ -125,10 +127,19 @@ async function downloadAndVerifyReleaseSync(
     return { tag: name, bin: assetPath };
   }
 
-  await eagerAcquireLockAndDownload(binUrl.browser_download_url, assetPath, algo, hex);
-  ensureExecutable(assetPath);
-  tryClearQuarantine(assetPath);
-  trySymlinkLatest(assetPath);
+  const spinner = yoctoSpinner({text: 'downloading latest sfw binary...'}).start();
+
+  try {
+    await eagerAcquireLockAndDownload(binUrl.browser_download_url, assetPath, algo, hex);
+    ensureExecutable(assetPath);
+    tryClearQuarantine(assetPath);
+    trySymlinkLatest(assetPath);    
+  } catch (err) {
+    spinner.error()
+    throw err;
+  }
+
+  spinner.success();
 
   return { tag: name, bin: assetPath };
 }

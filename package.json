@@ -42,5 +42,14 @@
       "signal-exit": "3.0.7"
     }
   },
-  "preferGlobal": true
+  "preferGlobal": true,
+  "dependencies": {
+    "yocto-spinner": "^1.0.0"
+  },
+  "bundleDependencies": [
+    "proper-lockfile",
+    "graceful-fs",
+    "retry",
+    "signal-exit"
+  ]
 }
