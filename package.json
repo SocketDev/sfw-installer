@@ -3,6 +3,10 @@
   "version": "2.0.0",
   "description": "Socket Firewall wrapper that verifies latest release and then runs npm with original args.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SocketDev/sfw-installer"
+  },
   "bin": {
     "sfw": "dist/sfw.mjs"
   },
