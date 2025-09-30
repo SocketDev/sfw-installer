@@ -1,4 +1,4 @@
-This is a wrapper script to download os + arch prebuilt executables of [Socket Firewall Lite](https://github.com/SocketDev/sfw-free).
+This is a wrapper script to download os + arch prebuilt executables of [Socket Firewall Free](https://github.com/SocketDev/sfw-free).
 
 It will automatically try to update in the background once a day if it finds a new release.
 
