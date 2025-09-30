@@ -1,5 +1,5 @@
 {
-  "name": "@socketsecurity/sfw-free",
+  "name": "sfw",
   "version": "1.2.0",
   "description": "Socket Firewall wrapper that verifies latest release and then runs npm with original args.",
   "license": "MIT",
