@@ -11,7 +11,8 @@ import { swallowError } from './util.ts';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const NEXT_CHECK_FILE = '.sfw-cache/next-check';
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+// Will change to 24 hours some time after launch
+const CHECK_TTL = 1 * 60 * 60 * 1000;
 
 // Handles both global and npx temporary installs.
 const INSTALL_ROOT = path.resolve(__dirname, '..');
@@ -56,7 +57,7 @@ function shouldCheckForUpdate() {
 }
 
 function setNextCheckTimeSync() {
-  const nextCheck = Date.now() + ONE_DAY_MS;
+  const nextCheck = Date.now() + CHECK_TTL;
   fs.mkdirSync(path.dirname(NEXT_CHECK_PATH), { recursive: true });
   fs.writeFileSync(NEXT_CHECK_PATH, new Date(nextCheck).toISOString());
 }
