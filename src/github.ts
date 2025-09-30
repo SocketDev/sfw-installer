@@ -46,6 +46,7 @@ export function expectedAssetName() {
   if (plat === 'windows' && arch === 'x86_64') return 'sfw-free-windows-x86_64.exe';
   if (plat === 'macos' && (arch === 'arm64' || arch === 'x86_64')) return `sfw-free-macos-${arch}`;
   if (plat === 'linux' && arch === 'x86_64') return 'sfw-free-linux-x86_64';
+  if (plat === 'linux' && arch === 'arm64') return 'sfw-free-linux-arm64';
   // If we get here, there's no published combo
   throw new Error(`No published asset for ${process.platform}/${process.arch}`);
 }
