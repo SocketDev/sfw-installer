@@ -1,6 +1,6 @@
 {
   "name": "sfw",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Socket Firewall wrapper that verifies latest release and then runs npm with original args.",
   "license": "MIT",
   "repository": {
