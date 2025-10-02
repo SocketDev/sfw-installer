@@ -10,7 +10,7 @@ Directory Structure:
 # a symlink that always points to the latest version downloaded
 ./.sfw-cache/latest => .sfw-cache/$VERSION/
 # a downloading executable that should be able to run on the machine
-./.sfw-cache/$VSERION/$BIN
+./.sfw-cache/$VERSION/$BIN
 # UTC based time to next look for a newly published version
 ./.sfw-cache/next-check
 # a resumable download of the asset
