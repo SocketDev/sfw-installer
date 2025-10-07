@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Wait for CI to pass
         id: wait-for-ci
-        uses: fountainhead/action-wait-for-check@v1.2.0
+        uses: fountainhead/action-wait-for-check@5a908a24814494009c4bb27c242ea38c93c593be
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           checkName: test
@@ -31,10 +31,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@ff7abcd0c3c05ccf6adc123a8cd1fd4fb30fb493
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@89d709d423dc495668cd762a18dd4a070611be3f
         with:
           node-version-file: 'package.json'
           cache: 'npm'
