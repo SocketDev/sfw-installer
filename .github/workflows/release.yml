@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 permissions: {}
 
@@ -42,8 +42,9 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@89d709d423dc495668cd762a18dd4a070611be3f
         with:
-          node-version-file: 'package.json'
-          registry-url: 'https://registry.npmjs.org'
+          package-manager-cache: false
+          node-version-file: "package.json"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Update npm to latest
         run: npm install -g npm@latest

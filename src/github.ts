@@ -43,10 +43,9 @@ function mapArch() {
 export function expectedAssetName() {
   const plat = mapPlatform();
   const arch = mapArch();
-  if (plat === 'windows' && arch === 'x86_64') return 'sfw-free-windows-x86_64.exe';
-  if (plat === 'macos' && (arch === 'arm64' || arch === 'x86_64')) return `sfw-free-macos-${arch}`;
-  if (plat === 'linux' && arch === 'x86_64') return 'sfw-free-linux-x86_64';
-  if (plat === 'linux' && arch === 'arm64') return 'sfw-free-linux-arm64';
+  if (plat === 'windows') return `sfw-free-windows-${arch}.exe`;
+  if (plat === 'macos') return `sfw-free-macos-${arch}`;
+  if (plat === 'linux') return `sfw-free-linux-${arch}`;
   // If we get here, there's no published combo
   throw new Error(`No published asset for ${process.platform}/${process.arch}`);
 }
