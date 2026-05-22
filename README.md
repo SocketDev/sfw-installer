@@ -2,6 +2,8 @@ This is a wrapper script to download os + arch prebuilt executables of [Socket F
 
 It will automatically try to update in the background once a day if it finds a new release.
 
+Set `SFW_SKIP_UPDATE_CHECK=1` to skip the background update check when a cached binary is already present (useful for offline or air-gapped environments). The initial download still runs if no binary is cached.
+
 Directory Structure:
 
 ```console

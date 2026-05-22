@@ -44,6 +44,9 @@ function getCachePaths(releaseName: string, assetName: string) {
 }
 
 function shouldCheckForUpdate() {
+  if (isUpdateCheckDisabled()) {
+    return false;
+  }
   try {
     const data = fs.readFileSync(NEXT_CHECK_PATH, 'utf8');
     const nextCheck = Date.parse(data.trim());
@@ -54,6 +57,13 @@ function shouldCheckForUpdate() {
   } catch {
     return true;
   }
+}
+
+function isUpdateCheckDisabled() {
+  const v = process.env.SFW_SKIP_UPDATE_CHECK;
+  if (!v) return false;
+  const s = v.toLowerCase();
+  return s === '1' || s === 'true' || s === 'yes';
 }
 
 function setNextCheckTimeSync() {
