@@ -8,7 +8,7 @@ Directory Structure:
 
 ```console
 # directory for downloaded versions of sfw
-./.swf-cache
+./.sfw-cache
 # a symlink that always points to the latest version downloaded
 ./.sfw-cache/latest => .sfw-cache/$VERSION/
 # a downloading executable that should be able to run on the machine
