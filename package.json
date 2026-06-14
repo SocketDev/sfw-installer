@@ -28,7 +28,7 @@
     "@biomejs/biome": "^2.2.4",
     "@types/node": "^24.5.2",
     "@types/proper-lockfile": "^4.1.4",
-    "esbuild": "^0.25.10",
+    "esbuild": "^0.28.1",
     "proper-lockfile": "4.1.2",
     "typescript": "^5.9.2",
     "yocto-spinner": "^1.0.0"
