@@ -45,7 +45,12 @@ export function expectedAssetName() {
   const arch = mapArch();
   if (plat === 'windows') return `sfw-free-windows-${arch}.exe`;
   if (plat === 'macos') return `sfw-free-macos-${arch}`;
-  if (plat === 'linux') return `sfw-free-linux-${arch}`;
+  if (plat === 'linux') {
+    const isMusl =
+      fs.existsSync('/lib/ld-musl-x86_64.so.1') ||
+      fs.existsSync('/lib/ld-musl-aarch64.so.1');
+    return `sfw-free-${isMusl ? 'musl-' : ''}linux-${arch}`;
+  }
   // If we get here, there's no published combo
   throw new Error(`No published asset for ${process.platform}/${process.arch}`);
 }
