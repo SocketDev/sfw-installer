@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import type { IncomingHttpHeaders } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -97,24 +98,37 @@ export async function fetchLatest(): Promise<LatestRelease> {
   };
 }
 
+// When the limit lifts. Secondary limits send `retry-after`, which takes
+// precedence: `x-ratelimit-reset` is on every response and is the primary
+// hourly window, so it's only meaningful once that quota is used up.
+function rateLimitWait(headers: IncomingHttpHeaders): string {
+  const retryAfter = Number(headers['retry-after']);
+  if (Number.isFinite(retryAfter) && retryAfter >= 0) {
+    return ` (retry after ${retryAfter}s)`;
+  }
+  const reset = Number(headers['x-ratelimit-reset']);
+  if (headers['x-ratelimit-remaining'] === '0' && Number.isFinite(reset) && reset > 0) {
+    return ` (resets at ${new Date(reset * 1000).toISOString()})`;
+  }
+  return '';
+}
+
 // Turn a fetchLatest() failure into a message that says what went wrong and,
 // where we can tell, what to do about it.
 export function describeFetchError(e: unknown): string {
   if (e instanceof HttpError) {
     const remaining = e.headers['x-ratelimit-remaining'];
-    const reset = Number(e.headers['x-ratelimit-reset']);
+    const retryAfter = e.headers['retry-after'];
     const rateLimited =
       e.statusCode === 429 ||
-      (e.statusCode === 403 && (remaining === '0' || e.headers['retry-after'] !== undefined));
+      (e.statusCode === 403 && (remaining === '0' || retryAfter !== undefined));
     if (rateLimited) {
-      const when =
-        Number.isFinite(reset) && reset > 0
-          ? ` (resets at ${new Date(reset * 1000).toISOString()})`
-          : '';
-      const hint = githubToken()
+      // Hint at a token only if the failing request didn't already send one
+      // (it may have been rejected and retried anonymously).
+      const hint = e.authenticated
         ? 'The configured GITHUB_TOKEN/GH_TOKEN has also hit its limit.'
         : 'Set GITHUB_TOKEN (or GH_TOKEN) to raise the limit.';
-      return `${e.message}: GitHub API rate limit exceeded${when}. ${hint}`;
+      return `${e.message}: GitHub API rate limit exceeded${rateLimitWait(e.headers)}. ${hint}`;
     }
     return e.message;
   }

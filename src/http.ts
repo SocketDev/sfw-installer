@@ -12,22 +12,32 @@ export class HttpError extends Error {
   readonly url: string;
   readonly statusCode: number;
   readonly headers: IncomingHttpHeaders;
+  // Whether the request that failed carried an Authorization header.
+  readonly authenticated: boolean;
 
-  constructor(url: string, statusCode: number, headers: IncomingHttpHeaders) {
+  constructor(
+    url: string,
+    statusCode: number,
+    headers: IncomingHttpHeaders,
+    authenticated: boolean,
+  ) {
     super(`GET ${url} failed with ${statusCode}`);
     this.name = 'HttpError';
     this.url = url;
     this.statusCode = statusCode;
     this.headers = headers;
+    this.authenticated = authenticated;
   }
+}
+
+function isAuthorizationHeader(name: string): boolean {
+  return name.toLowerCase() === 'authorization';
 }
 
 // Credentials must never follow a redirect to a different host (e.g. from
 // api.github.com to the release-asset CDN).
 function withoutAuthorization(headers: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(headers).filter(([k]) => k.toLowerCase() !== 'authorization'),
-  );
+  return Object.fromEntries(Object.entries(headers).filter(([k]) => !isAuthorizationHeader(k)));
 }
 
 export async function httpsGet(
@@ -65,7 +75,8 @@ export async function httpsGet(
         }
         if (statusCode < 200 || statusCode >= 300) {
           res.resume();
-          return reject(new HttpError(url, statusCode, h));
+          const authenticated = Object.keys(headers).some(isAuthorizationHeader);
+          return reject(new HttpError(url, statusCode, h, authenticated));
         }
         resolve(res);
       })
