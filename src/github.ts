@@ -78,6 +78,15 @@ function apiHeaders(token: string | undefined): Record<string, string> {
   };
 }
 
+// Thrown when GitHub rejected the configured token (401) and the anonymous
+// retry then failed too. The retry's error is the cause.
+export class TokenRejectedError extends Error {
+  constructor(cause: unknown) {
+    super('GITHUB_TOKEN/GH_TOKEN was rejected and the anonymous retry failed', { cause });
+    this.name = 'TokenRejectedError';
+  }
+}
+
 export async function fetchLatest(): Promise<LatestRelease> {
   const token = githubToken();
   // biome-ignore lint/suspicious/noExplicitAny: reasonable type for the GitHub API response
@@ -89,7 +98,11 @@ export async function fetchLatest(): Promise<LatestRelease> {
     if (!(token && e instanceof HttpError && e.statusCode === 401)) {
       throw e;
     }
-    json = await getJSON(LATEST_API, { userAgent: USER_AGENT, headers: apiHeaders(undefined) });
+    try {
+      json = await getJSON(LATEST_API, { userAgent: USER_AGENT, headers: apiHeaders(undefined) });
+    } catch (retryError) {
+      throw new TokenRejectedError(retryError);
+    }
   }
   return {
     tag: json.tag_name,
@@ -116,6 +129,14 @@ function rateLimitWait(headers: IncomingHttpHeaders): string {
 // Turn a fetchLatest() failure into a message that says what went wrong and,
 // where we can tell, what to do about it.
 export function describeFetchError(e: unknown): string {
+  if (e instanceof TokenRejectedError) {
+    return describeFailure(e.cause, true);
+  }
+  return describeFailure(e, false);
+}
+
+function describeFailure(e: unknown, tokenRejected: boolean): string {
+  const rejectedNote = tokenRejected ? ' (GITHUB_TOKEN/GH_TOKEN was rejected with 401)' : '';
   if (e instanceof HttpError) {
     const remaining = e.headers['x-ratelimit-remaining'];
     const retryAfter = e.headers['retry-after'];
@@ -123,19 +144,26 @@ export function describeFetchError(e: unknown): string {
       e.statusCode === 429 ||
       (e.statusCode === 403 && (remaining === '0' || retryAfter !== undefined));
     if (rateLimited) {
-      // Hint at a token only if the failing request didn't already send one
-      // (it may have been rejected and retried anonymously).
-      const hint = e.authenticated
-        ? 'The configured GITHUB_TOKEN/GH_TOKEN has also hit its limit.'
-        : 'Set GITHUB_TOKEN (or GH_TOKEN) to raise the limit.';
+      // The hint depends on the failing request: a rejected token needs fixing,
+      // a working token has run out too, and an anonymous request needs one.
+      let hint: string;
+      if (tokenRejected) {
+        hint = 'GITHUB_TOKEN/GH_TOKEN was rejected (401); fix or unset it.';
+      } else if (e.authenticated) {
+        hint = 'The configured GITHUB_TOKEN/GH_TOKEN has also hit its limit.';
+      } else {
+        hint = 'Set GITHUB_TOKEN (or GH_TOKEN) to raise the limit.';
+      }
       return `${e.message}: GitHub API rate limit exceeded${rateLimitWait(e.headers)}. ${hint}`;
     }
-    return e.message;
+    return `${e.message}${rejectedNote}`;
   }
   if (e instanceof Error) {
-    return e.message;
+    // Node reports a refused connection to a multi-address host as an
+    // AggregateError with an empty message; fall back to the error code.
+    return `${e.message || (e as NodeJS.ErrnoException).code || e.name}${rejectedNote}`;
   }
-  return String(e);
+  return `${String(e)}${rejectedNote}`;
 }
 
 export function findAssetUrl(

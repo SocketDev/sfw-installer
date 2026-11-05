@@ -35,3 +35,14 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Tests run the TypeScript sources directly via type stripping, which
+      # needs Node >= 22.6; the published bundle still supports engines.node.
+      - name: Setup Node.js for tests
+        uses: actions/setup-node@89d709d423dc495668cd762a18dd4a070611be3f
+        with:
+          package-manager-cache: false
+          node-version: 24
+
+      - name: Test
+        run: npm test

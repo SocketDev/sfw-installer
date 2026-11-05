@@ -9,7 +9,6 @@ export interface HttpGetOptions {
 }
 
 export class HttpError extends Error {
-  readonly url: string;
   readonly statusCode: number;
   readonly headers: IncomingHttpHeaders;
   // Whether the request that failed carried an Authorization header.
@@ -23,7 +22,6 @@ export class HttpError extends Error {
   ) {
     super(`GET ${url} failed with ${statusCode}`);
     this.name = 'HttpError';
-    this.url = url;
     this.statusCode = statusCode;
     this.headers = headers;
     this.authenticated = authenticated;

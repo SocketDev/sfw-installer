@@ -18,7 +18,8 @@
     "build": "npm run clean && esbuild src/sfw.ts --bundle --platform=node --format=esm --outfile=dist/sfw.mjs --banner:js='#!/usr/bin/env node\nimport { createRequire } from \"module\";\nconst require = createRequire(import.meta.url);\n'",
     "prepublishOnly": "npm run build",
     "check": "biome check",
-    "check:fix": "biome check --fix"
+    "check:fix": "biome check --fix",
+    "test": "node --test --experimental-strip-types --no-warnings=ExperimentalWarning 'test/**/*.test.ts'"
   },
   "type": "module",
   "engines": {
