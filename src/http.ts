@@ -1,4 +1,4 @@
-import type { IncomingMessage } from 'node:http';
+import type { IncomingHttpHeaders, IncomingMessage } from 'node:http';
 import https from 'node:https';
 import { URL } from 'node:url';
 
@@ -6,6 +6,28 @@ export interface HttpGetOptions {
   headers?: Record<string, string>;
   maxRedirects?: number;
   userAgent?: string;
+}
+
+export class HttpError extends Error {
+  readonly url: string;
+  readonly statusCode: number;
+  readonly headers: IncomingHttpHeaders;
+
+  constructor(url: string, statusCode: number, headers: IncomingHttpHeaders) {
+    super(`GET ${url} failed with ${statusCode}`);
+    this.name = 'HttpError';
+    this.url = url;
+    this.statusCode = statusCode;
+    this.headers = headers;
+  }
+}
+
+// Credentials must never follow a redirect to a different host (e.g. from
+// api.github.com to the release-asset CDN).
+function withoutAuthorization(headers: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(headers).filter(([k]) => k.toLowerCase() !== 'authorization'),
+  );
 }
 
 export async function httpsGet(
@@ -31,11 +53,19 @@ export async function httpsGet(
         }
         if (statusCode >= 300 && statusCode < 400 && h.location && maxRedirects > 0) {
           res.resume();
-          return resolve(httpsGet(h.location, { ...options, maxRedirects: maxRedirects - 1 }));
+          const next = new URL(h.location, u);
+          const nextHeaders = next.host === u.host ? headers : withoutAuthorization(headers);
+          return resolve(
+            httpsGet(next.toString(), {
+              ...options,
+              headers: nextHeaders,
+              maxRedirects: maxRedirects - 1,
+            }),
+          );
         }
         if (statusCode < 200 || statusCode >= 300) {
           res.resume();
-          return reject(new Error(`GET ${url} failed with ${statusCode}`));
+          return reject(new HttpError(url, statusCode, h));
         }
         resolve(res);
       })
