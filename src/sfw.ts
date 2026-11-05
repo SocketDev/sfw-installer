@@ -5,7 +5,13 @@ import { fileURLToPath } from 'node:url';
 
 import yoctoSpinner from 'yocto-spinner';
 
-import { expectedAssetName, fetchLatest, findAssetUrl, type LatestRelease } from './github.ts';
+import {
+  describeFetchError,
+  expectedAssetName,
+  fetchLatest,
+  findAssetUrl,
+  type LatestRelease,
+} from './github.ts';
 import { eagerAcquireLockAndDownload } from './resumable.ts';
 import { swallowError } from './util.ts';
 
@@ -166,8 +172,11 @@ async function ensureLatestBinary(): Promise<LatestBinary> {
     setNextCheckTimeSync();
     try {
       releaseInfo = await fetchLatest();
-    } catch (_e) {
-      throw new Error('Unable to fetch latest release and no valid cached release found.');
+    } catch (e) {
+      throw new Error(
+        `Unable to fetch latest release and no valid cached release found: ${describeFetchError(e)}`,
+        { cause: e },
+      );
     }
     return await downloadAndVerifyReleaseSync(releaseInfo, assetName);
   }
